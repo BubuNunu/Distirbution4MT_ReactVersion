@@ -42,10 +42,10 @@ const rgbToHex = (r, g, b) => '#' + [r, g, b].map(x => {
     return hex.length === 1 ? '0' + hex : hex
 }).join('')
 function updateLinearX(curYBottom, curYTop, range0, range1) {
-    let linearY = d3.scaleLinear()
+    let linearX = d3.scaleLinear()
         .domain([curYBottom, curYTop])
         .range([range0, range1])
-    return linearY
+    return linearX
 }
 function sortBranchPs(topP, value, downIndex) {
     let sortedArr = []
@@ -92,12 +92,16 @@ function getData4mergetree(objects) {
     return { "data": result, "xRange": d3.extent(xarr), "yRange": d3.extent(objects[0].pointData.KDE.data) }
 }
 function drawStreamgraph4eachBranch(data2stream, yScale, xScale, width, data2draw, pointData, svg) {
-    let countMin = Infinity
-    let countMax = -1
-    for (let j = 0; j < data2stream.length; j++) {
-        countMin = Math.min(countMin, data2stream[j][2])
-        countMax = Math.max(countMax, data2stream[j][2])
-    }
+    // let countMin = Infinity
+    // let countMax = -1
+    // for (let j = 0; j < data2stream.length; j++) {
+    //     countMin = Math.min(countMin, data2stream[j][2])
+    //     countMax = Math.max(countMax, data2stream[j][2])
+    // }
+    let countMin = Math.min(...pointData.Size.data)
+    let countMax = Math.max(...pointData.Size.data)
+    // console.log("pointData: ", pointData.Size.data, Math.min(...pointData.Size.data))
+    // console.log("countMin, countMax: ", countMin, countMax)
     // here to set the width of streamgraph for the branch
     let streamWmin = width / (data2draw.data.length * 3),
         streamWmax = width / (data2draw.data.length)
@@ -112,12 +116,9 @@ function drawStreamgraph4eachBranch(data2stream, yScale, xScale, width, data2dra
         let currentLayers = StreamGraph.HierarchicalClusteringOrder(data2stream[index][1], weight4tichness)
         currentLayers = StreamGraph.StreamLayout_2norm_Gauss(currentLayers, weight4gaussian)
         let graph_draw_data = StreamGraph.getLayersData(currentLayers)
-        // console.log("currentLayers for branch: ", index, currentLayers)
-        // console.log("graph_draw_data for branch: ", index, graph_draw_data)
-
 
         let arcYTop = yScale(pointData.KDE.data[data2draw.data[index][1][0]]) // top point of the branch: y value
-        let arcYBottom = yScale(pointData.KDE.data[data2draw.data[index][1].slice(-2)[0]]) // bottom point of the branch. the streamgraph contain the last point on the main branch.
+        let arcYBottom = yScale(pointData.KDE.data[data2draw.data[index][1].slice(-2)[0]]) // bottom point of the branch.
         if (index == 0) {
             // for the main branch, the last point is the real last one in data2draw
             arcYBottom = yScale(pointData.KDE.data[data2draw.data[index][1].slice(-1)[0]])
@@ -128,7 +129,26 @@ function drawStreamgraph4eachBranch(data2stream, yScale, xScale, width, data2dra
         let linearY = d3.scaleLinear()
             .domain([0, currentLayers[0].size.length - 1])
             .range([arcYTop, arcYBottom]) // to show a little arc top for each branch
-        let linearX = updateLinearX(graph_draw_data[1], graph_draw_data[2], arcX, arcX + 2 * streamUnit) // put the streamgraph in the middle of the arc
+
+        // get to the center of the beginning of streamgraph
+        let xBottom4begin = Infinity,
+            xTop4begin = -Infinity;
+
+        for (let index = 0; index < graph_draw_data[0].length; index++) {
+            const x0 = graph_draw_data[0][index][0][0]
+            const x1 = graph_draw_data[0][index][0][1]
+            xBottom4begin = Math.min(xBottom4begin, x0)
+            xTop4begin = Math.max(xTop4begin, x1)
+
+        }
+        // console.log("ymin4first, ymax4first: ", xBottom4begin, xTop4begin)
+        let scaleX = d3.scaleLinear()
+            .domain([graph_draw_data[1], graph_draw_data[2]])
+            .range([0, 2 * streamUnit])
+        let middleX = (scaleX(xBottom4begin) + scaleX(xTop4begin)) / 2
+        // console.log("middleX: ", middleX, 2 * streamUnit)
+
+        let linearX = updateLinearX(graph_draw_data[1], graph_draw_data[2], arcX - middleX, arcX - middleX + 2 * streamUnit) // put the streamgraph in the middle of the arc
 
         let LayersArea = d3.area()
             .curve(d3.curveBasis)
@@ -149,16 +169,15 @@ function drawStreamgraph4eachBranch(data2stream, yScale, xScale, width, data2dra
             .append("path")
             .attr("class", "stream" + index)
             .attr("id", (d, i) => {
-                return "streamLayer" + i
+                return "streamLayer" + d.id
             })
             .style("fill", function (d) {
-                // console.log("d in layer: ", d)
                 let colorId = d.id % 12
                 return rgbToHex(colorMap[colorId * 3],
                     colorMap[colorId * 3 + 1],
                     colorMap[colorId * 3 + 2])
             })
-            .style("fill-opacity", 1)
+            .style("fill-opacity", 0.8)
             .style("stroke", function (d) {
                 return "white";
             })
@@ -169,13 +188,16 @@ function drawStreamgraph4eachBranch(data2stream, yScale, xScale, width, data2dra
                 return d.id
             })
             .attr("d", LayersArea)
-            .on("mouseover", (d) => {
-                // console.log("hovering : ", d)
+            .on("mouseover", function (d) {
+                let cateLayer2show = d3.select(this).attr("id")
+                svg.selectAll("#" + cateLayer2show).style("fill-opacity", 1)
             })
-            // .on("mouseout", handleMouseOut)
+            .on("mouseout", function (d) {
+                let cateLayer2show = d3.select(this).attr("id")
+                svg.selectAll("#" + cateLayer2show).style("fill-opacity", 0.8)
+            })
             .on("click", function (d) {
                 console.log("click the layer of the streamgraph: ", categoryArr[d.id])
-                // console.log("count arr: ", data2stream[])
             })
     }
 }
@@ -256,7 +278,7 @@ function drawMergeTree(data2draw, margin, height, width, svgID, pointData, data2
 
 }
 
-class Type1MT extends React.Component {
+class Type0MT extends React.Component {
     constructor(props) {
         super(props);
         this.container = React.createRef();
@@ -280,25 +302,34 @@ class Type1MT extends React.Component {
         let data2drawMT = getData4mergetree(data)
         // console.log("data2drawMT: ", data2drawMT)
         let cateCount = data[0].pointData.KDE_ByType_I1.nComponents
-        let data2stream4type0 = data2drawMT.data.map(pArr => {
+        let data2stream4type = data2drawMT.data.map(pArr => {
             let distributionOnBranch = [
                 pArr[0],
                 [],
-                data[0].pointData.Size.data[pArr[1][pArr[1].length - 1]] // get the maximum count of the arc, it's last second point. The streamgraph don't contain the last point on the main branch.
+                // -1: get the maximum count of the arc, it's last second point. The streamgraph don't contain the last point on the main branch.
+                // -2: the real last point on the branch except the main branch.
+                data[0].pointData.Size.data[pArr[1][pArr[1].length - 2]]
             ]
+            if (pArr[0] == 0) {
+                distributionOnBranch[2] = data[0].pointData.Size.data[pArr[1][pArr[1].length - 1]]
+            }
             for (let j4cat = 0; j4cat < cateCount; j4cat++) {
                 distributionOnBranch[1].push({ "size": [], "id": j4cat })
             }
 
             for (let pointIndexinBranchID = 0; pointIndexinBranchID < pArr[1].length; pointIndexinBranchID++) {
+                if (pArr[0] != 0 && pointIndexinBranchID == pArr[1].length - 1) {
+                    continue
+                }
                 for (let j4cat = 0; j4cat < cateCount; j4cat++) {
                     distributionOnBranch[1][j4cat]["size"].push(data[0].pointData.KDE_ByType_I1.data[pArr[1][pointIndexinBranchID] * cateCount + j4cat])
                 }
             }
             return distributionOnBranch
         })
-        // console.log("data2stream4type0: ", data2stream4type0)
-        drawMergeTree(data2drawMT, margin, height, width, svgID, data[0].pointData, data2stream4type0)
+        // console.log("data2drawMT: ", data2drawMT)
+        // console.log("data2stream4type: ", data2stream4type)
+        drawMergeTree(data2drawMT, margin, height, width, svgID, data[0].pointData, data2stream4type)
     }
 
     initializeCanvas() {
@@ -330,4 +361,4 @@ class Type1MT extends React.Component {
 export default connect(
     mapStateToProps,
     mapDispatchToProps
-)(Type1MT);
+)(Type0MT);

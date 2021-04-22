@@ -42,10 +42,10 @@ const rgbToHex = (r, g, b) => '#' + [r, g, b].map(x => {
     return hex.length === 1 ? '0' + hex : hex
 }).join('')
 function updateLinearX(curYBottom, curYTop, range0, range1) {
-    let linearY = d3.scaleLinear()
+    let linearX = d3.scaleLinear()
         .domain([curYBottom, curYTop])
         .range([range0, range1])
-    return linearY
+    return linearX
 }
 function sortBranchPs(topP, value, downIndex) {
     let sortedArr = []
@@ -116,12 +116,9 @@ function drawStreamgraph4eachBranch(data2stream, yScale, xScale, width, data2dra
         let currentLayers = StreamGraph.HierarchicalClusteringOrder(data2stream[index][1], weight4tichness)
         currentLayers = StreamGraph.StreamLayout_2norm_Gauss(currentLayers, weight4gaussian)
         let graph_draw_data = StreamGraph.getLayersData(currentLayers)
-        // console.log("currentLayers for branch: ", index, currentLayers)
-        // console.log("graph_draw_data for branch: ", index, graph_draw_data)
-
 
         let arcYTop = yScale(pointData.KDE.data[data2draw.data[index][1][0]]) // top point of the branch: y value
-        let arcYBottom = yScale(pointData.KDE.data[data2draw.data[index][1].slice(-2)[0]]) // bottom point of the branch. the streamgraph contain the last point on the main branch.
+        let arcYBottom = yScale(pointData.KDE.data[data2draw.data[index][1].slice(-2)[0]]) // bottom point of the branch.
         if (index == 0) {
             // for the main branch, the last point is the real last one in data2draw
             arcYBottom = yScale(pointData.KDE.data[data2draw.data[index][1].slice(-1)[0]])
@@ -132,7 +129,26 @@ function drawStreamgraph4eachBranch(data2stream, yScale, xScale, width, data2dra
         let linearY = d3.scaleLinear()
             .domain([0, currentLayers[0].size.length - 1])
             .range([arcYTop, arcYBottom]) // to show a little arc top for each branch
-        let linearX = updateLinearX(graph_draw_data[1], graph_draw_data[2], arcX, arcX + 2 * streamUnit) // put the streamgraph in the middle of the arc
+
+        // get to the center of the beginning of streamgraph
+        let xBottom4begin = Infinity,
+            xTop4begin = -Infinity;
+
+        for (let index = 0; index < graph_draw_data[0].length; index++) {
+            const x0 = graph_draw_data[0][index][0][0]
+            const x1 = graph_draw_data[0][index][0][1]
+            xBottom4begin = Math.min(xBottom4begin, x0)
+            xTop4begin = Math.max(xTop4begin, x1)
+
+        }
+        // console.log("ymin4first, ymax4first: ", xBottom4begin, xTop4begin)
+        let scaleX = d3.scaleLinear()
+            .domain([graph_draw_data[1], graph_draw_data[2]])
+            .range([0, 2 * streamUnit])
+        let middleX = (scaleX(xBottom4begin) + scaleX(xTop4begin)) / 2
+        // console.log("middleX: ", middleX, 2 * streamUnit)
+
+        let linearX = updateLinearX(graph_draw_data[1], graph_draw_data[2], arcX - middleX, arcX - middleX + 2 * streamUnit) // put the streamgraph in the middle of the arc
 
         let LayersArea = d3.area()
             .curve(d3.curveBasis)
@@ -292,7 +308,7 @@ class Type0MT extends React.Component {
                 [],
                 // -1: get the maximum count of the arc, it's last second point. The streamgraph don't contain the last point on the main branch.
                 // -2: the real last point on the branch except the main branch.
-                data[0].pointData.Size.data[pArr[1][pArr[1].length - 2]] 
+                data[0].pointData.Size.data[pArr[1][pArr[1].length - 2]]
             ]
             if (pArr[0] == 0) {
                 distributionOnBranch[2] = data[0].pointData.Size.data[pArr[1][pArr[1].length - 1]]
