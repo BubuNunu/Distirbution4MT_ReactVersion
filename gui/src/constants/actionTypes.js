@@ -1,1 +1,2 @@
 export const LOADING_DATA = "LOADING_DATA";
+export const UPDATE_SLIDER_VALUE = "UPDATE_SLIDER_VALUE";

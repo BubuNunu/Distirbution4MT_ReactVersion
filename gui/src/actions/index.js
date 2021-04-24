@@ -1,5 +1,6 @@
 import axios from "axios";
 import { LOADING_DATA } from "../constants/actionTypes";
+import { UPDATE_SLIDER_VALUE } from "../constants/actionTypes";
 require("../common/ttkWebSocketIO.js");
 
 export function getData() {
@@ -51,4 +52,7 @@ export function getData() {
         });
 
     };
+}
+export function updateSliderValue(payload) {
+    return {type: UPDATE_SLIDER_VALUE, payload};
 }
