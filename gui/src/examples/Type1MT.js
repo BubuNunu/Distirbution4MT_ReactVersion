@@ -47,7 +47,7 @@ class Type1MT extends React.Component {
     }
 
     initializeCanvas() {
-        console.log("data to draw type1mt: ", this.props);
+        // console.log("data to draw type1mt: ", this.props);
         this.renderSvg(this.props);
     }
 

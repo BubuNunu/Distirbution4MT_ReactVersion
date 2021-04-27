@@ -127,7 +127,7 @@ function drawStreamgraph4eachBranch(data2stream, yScale, xScale, width, data2dra
                 return "streamLayer" + d.id
             })
             .style("fill", function (d) {
-                if(d.id == "restCountID") return "gray";
+                if (d.id == "restCountID") return "gray";
                 let colorId = d.id % 12
                 return rgbToHex(colorMap[colorId * 3],
                     colorMap[colorId * 3 + 1],
@@ -157,6 +157,125 @@ function drawStreamgraph4eachBranch(data2stream, yScale, xScale, width, data2dra
             })
     }
 }
+function getLayersData4version2SG(layers) {
+    // layers: [[branchid, [{"size":[c0, c1, ...], "id":catid}, ..{}]]...]
+    let data = []
+    let YBottom = Infinity,
+        YTop = -Infinity;
+    for (let i = 0; i < layers.length; i++) {
+        data.push([]);
+    }
+    // initilize start layers: top and bottom
+    let topLocations = Array(layers[0].size.length).fill(0)
+    let bottomLocations = Array(layers[0].size.length).fill(0)
+    // get the locations of the points for each category of the streamgraph
+    for (let i = 0; i < layers.length; i++) {
+        data[i].id = layers[i].id;
+        // get the location for each point in each layer
+        for (let j = 0; j < layers[i].size.length; j++) {
+            topLocations[j] += layers[i].size[j]
+            data[i].push([bottomLocations[j], topLocations[j]])
+            data[i][j].time = j;
+        }
+
+        let curveBottom = d3.interpolateBasis(bottomLocations);
+        let curveTop = d3.interpolateBasis(topLocations);
+
+        for (let j = 0; j < layers[i].size.length; j++) {
+            YBottom = Math.min(YBottom, curveBottom(j / (layers[i].size.length - 1)));
+            YTop = Math.max(YTop, curveTop(j / (layers[i].size.length - 1)));
+        }
+
+        bottomLocations = topLocations.slice()
+    }
+
+    return [data, YBottom, YTop];
+}
+function drawfixedSG4eachBranch(data2stream, yScale, xScale, width, data2draw, pointData, svg, categoryArr) {
+    let countMin = Math.min(...pointData.Size.data)
+    let countMax = Math.max(...pointData.Size.data)
+
+    // here to set the width of streamgraph for the branch
+    let streamWmin = width / (data2draw.data.length * 3),
+        streamWmax = width / (data2draw.data.length)
+    let streamWScale = d3.scaleLinear()
+        .domain([countMin, countMax])
+        .range([streamWmin, streamWmax])
+
+    // draw the stream graph for each branch
+    for (let index = 0; index < data2stream.length; index++) {
+        let streamUnit = streamWScale(data2stream[index][2])
+
+        let graph_draw_data = getLayersData4version2SG(data2stream[index][1])
+        // console.log("graph_draw_data: ", graph_draw_data)
+
+        let arcYTop = yScale(pointData.KDE.data[data2draw.data[index][1][0]]) // top point of the branch: y value
+        let arcYBottom = yScale(pointData.KDE.data[data2draw.data[index][1].slice(-2)[0]]) // bottom point of the branch.
+        if (index == 0) {
+            // for the main branch, the last point is the real last one in data2draw
+            arcYBottom = yScale(pointData.KDE.data[data2draw.data[index][1].slice(-1)[0]])
+        }
+        let arcX = xScale(pointData.Layout.data[2 * data2draw.data[index][1][0] + 1])
+
+
+        let linearY = d3.scaleLinear()
+            .domain([0, graph_draw_data[0][0].length - 1])
+            .range([arcYTop, arcYBottom]) // to show a little arc top for each branch
+
+        let linearX = updateLinearX(graph_draw_data[1], graph_draw_data[2], arcX, arcX + 2 * streamUnit) // put the streamgraph in the middle of the arc
+
+        let LayersArea = d3.area()
+            .curve(d3.curveBasis)
+            .x0(function (d) {
+                return linearX(d[0]);
+            })
+            .x1(function (d) {
+                return linearX(d[1]);
+            })
+            .y(function (d) {
+                return linearY(d.time);
+            });
+
+        svg.selectAll(".stream" + index)
+            .data(graph_draw_data[0])
+            .enter()
+            .append("path")
+            .attr("class", "stream" + index)
+            .attr("id", (d, i) => {
+                return "streamLayer" + d.id
+            })
+            .style("fill", function (d) {
+                if (d.id == "restCountID") return "gray";
+                let colorId = d.id % 12
+                return rgbToHex(colorMap[colorId * 3],
+                    colorMap[colorId * 3 + 1],
+                    colorMap[colorId * 3 + 2])
+            })
+            .style("fill-opacity", 0.8)
+            .style("stroke", function (d) {
+                return "white";
+            })
+            .style("stroke-width", function (d) {
+                return 0;
+            })
+            .attr("name", function (d) {
+                return d.id
+            })
+            .attr("d", LayersArea)
+            .on("mouseover", function (d) {
+                let cateLayer2show = d3.select(this).attr("id")
+                svg.selectAll("#" + cateLayer2show).style("fill-opacity", 1)
+            })
+            .on("mouseout", function (d) {
+                let cateLayer2show = d3.select(this).attr("id")
+                svg.selectAll("#" + cateLayer2show).style("fill-opacity", 0.8)
+            })
+            .on("click", function (d) {
+                console.log("click the layer of the streamgraph: ", categoryArr[d.id])
+            })
+    }
+}
+
 
 export const drawMT = {
     getData4mergetree: function (objects) {
@@ -194,18 +313,18 @@ export const drawMT = {
     drawMergeTree: function (data2draw, margin, height, width, svgID, pointData, data2stream, categoryArr) {
         d3.select("#" + svgID).style("width", width);
         const svg = d3.select("#" + svgID + "-base")
-    
+
         let extraX = (data2draw.xRange[1] - data2draw.xRange[0]) / 10
         let extraY = (data2draw.yRange[1] - data2draw.yRange[0]) / 20
-    
+
         let xScale = d3.scaleLinear()
             .domain([data2draw.xRange[0] - extraX, data2draw.xRange[1] + extraX])
             .range([margin.left, width - margin.right]);
-    
+
         let yScale = d3.scaleLinear()
             .domain([data2draw.yRange[0] - extraY, data2draw.yRange[1] + extraY])
             .range([height - margin.bottom, margin.top]);
-    
+
         let lineGenerator = d3.line()
             .x(function (d, i) {
                 return xScale(pointData.Layout.data[2 * d + 1])
@@ -214,17 +333,17 @@ export const drawMT = {
                 return yScale(pointData.KDE.data[d])
             })
         lineGenerator.curve(d3.curveLinear)
-    
+
         svg.append("g")
             .attr("class", "x axis")
             .attr("transform", "translate(0," + (height - margin.bottom) + ")")
             .call(d3.axisBottom(xScale).tickFormat(d3.format(".2")));
-    
+
         svg.append("g")
             .attr("class", "y axis")
             .attr("transform", "translate(" + margin.left + ",0)")
             .call(d3.axisLeft(yScale).tickFormat(d3.format(".2")));
-    
+
         // text label for the x axis
         svg.append("g")
             .attr(
@@ -238,7 +357,7 @@ export const drawMT = {
             .append("text")
             .attr("font-size", "0.6rem")
             .text("Layout");
-    
+
         // text label for the y axis
         svg.append("g")
             .attr(
@@ -248,7 +367,7 @@ export const drawMT = {
             .append("text")
             .attr("font-size", "0.6rem")
             .text("Density");
-    
+
         // create the arc leaf of merge three
         svg.selectAll(".arcLine")
             .data(data2draw.data)
@@ -262,12 +381,12 @@ export const drawMT = {
             .attr("stroke-width", 2)
             .attr("stroke", "black")
             .style("fill", "none")
-    
+
         // draw the stream graph for each arc
         drawStreamgraph4eachBranch(data2stream, yScale, xScale, width, data2draw, pointData, svg, categoryArr)
-    
+
     },
-    getData4streamgraph: function(data2drawMT, data, cateCount, kdetype, sliderValue) {
+    getData4streamgraph: function (data2drawMT, data, cateCount, kdetype, sliderValue) {
         // get the last point of the main branch, then get the distribution of cats at the point, the category can be soreted by the count at the point
         //// last point on the main branch
         let lastPointonBranch = data2drawMT.data[0][1][data2drawMT.data[0][1].length - 1]
@@ -295,17 +414,17 @@ export const drawMT = {
                 distributionOnBranch[2] = data[0].pointData.Size.data[pArr[1][pArr[1].length - 1]]
             }
             // create the distribution for topN category of each vertex
-            for (let j4cat of topNcategories){
+            for (let j4cat of topNcategories) {
                 distributionOnBranch[1].push({ "size": [], "id": j4cat })
             }
             // create the count of the rest of the categories for each vertex
-            distributionOnBranch[1].push({ "size": [], "id": "restCountID"})
+            distributionOnBranch[1].push({ "size": [], "id": "restCountID" })
 
             for (let pointIndexinBranchID = 0; pointIndexinBranchID < pArr[1].length; pointIndexinBranchID++) {
                 if (pArr[0] != 0 && pointIndexinBranchID == pArr[1].length - 1) {
                     continue
                 }
-                for (let j4cat of topNcategories){
+                for (let j4cat of topNcategories) {
                     let distribution4categroy = distributionOnBranch[1].find(item => item["id"] == j4cat)
                     distribution4categroy["size"].push(data[0].pointData[kdetype].data[pArr[1][pointIndexinBranchID] * cateCount + j4cat])
                 }
@@ -316,11 +435,86 @@ export const drawMT = {
                         cateRestCount += data[0].pointData[kdetype].data[pArr[1][pointIndexinBranchID] * cateCount + j4cat]
                     }
                 }
-                let distribution4cateRests= distributionOnBranch[1].find(item => item["id"] == "restCountID")
+                let distribution4cateRests = distributionOnBranch[1].find(item => item["id"] == "restCountID")
                 distribution4cateRests["size"].push(cateRestCount)
             }
             return distributionOnBranch
         })
         return data2stream4type
+    },
+    drawMergeTree_version2: function (data2draw, margin, height, width, svgID, pointData, data2stream, categoryArr) {
+        d3.select("#" + svgID).style("width", width);
+        const svg = d3.select("#" + svgID + "-base")
+
+        let extraX = (data2draw.xRange[1] - data2draw.xRange[0]) / 10
+        let extraY = (data2draw.yRange[1] - data2draw.yRange[0]) / 20
+
+        let xScale = d3.scaleLinear()
+            .domain([data2draw.xRange[0] - extraX, data2draw.xRange[1] + extraX])
+            .range([margin.left, width - margin.right]);
+
+        let yScale = d3.scaleLinear()
+            .domain([data2draw.yRange[0] - extraY, data2draw.yRange[1] + extraY])
+            .range([height - margin.bottom, margin.top]);
+
+        let lineGenerator = d3.line()
+            .x(function (d, i) {
+                return xScale(pointData.Layout.data[2 * d + 1])
+            })
+            .y(function (d, i) {
+                return yScale(pointData.KDE.data[d])
+            })
+        lineGenerator.curve(d3.curveLinear)
+
+        svg.append("g")
+            .attr("class", "x axis")
+            .attr("transform", "translate(0," + (height - margin.bottom) + ")")
+            .call(d3.axisBottom(xScale).tickFormat(d3.format(".2")));
+
+        svg.append("g")
+            .attr("class", "y axis")
+            .attr("transform", "translate(" + margin.left + ",0)")
+            .call(d3.axisLeft(yScale).tickFormat(d3.format(".2")));
+
+        // text label for the x axis
+        svg.append("g")
+            .attr(
+                "transform",
+                "translate(" +
+                (Number(width) - 50) +
+                "," +
+                (Number(height)) +
+                ")"
+            )
+            .append("text")
+            .attr("font-size", "0.6rem")
+            .text("Layout");
+
+        // text label for the y axis
+        svg.append("g")
+            .attr(
+                "transform",
+                "translate(" + 0 + "," + Number(margin.top - 10) + ")"
+            )
+            .append("text")
+            .attr("font-size", "0.6rem")
+            .text("Density");
+
+        // create the arc leaf of merge three
+        svg.selectAll(".arcLine")
+            .data(data2draw.data)
+            .enter()
+            .append("path")
+            .attr("class", "arcLine")
+            .attr("id", (d, i) => "arcLineID" + i)
+            .attr("d", (d, i) => {
+                return lineGenerator(d[1])
+            })
+            .attr("stroke-width", 2)
+            .attr("stroke", "black")
+            .style("fill", "none")
+
+        // draw the stream graph for each arc
+        drawfixedSG4eachBranch(data2stream, yScale, xScale, width, data2draw, pointData, svg, categoryArr)
     }
 }

@@ -18,7 +18,7 @@ const mapDispatchToProps = dispatch => {
 };
 
 
-class Type0MT extends React.Component {
+class Type0MT_version extends React.Component {
     constructor(props) {
         super(props);
         this.container = React.createRef();
@@ -43,7 +43,7 @@ class Type0MT extends React.Component {
         let cateCount = data[0].pointData.KDE_ByType_I0.nComponents
         let data2stream4type = drawMT.getData4streamgraph(data2drawMT, data, cateCount, "KDE_ByType_I0", sliderValue)
         
-        drawMT.drawMergeTree(data2drawMT, margin, height, width, svgID, data[0].pointData, data2stream4type, categoryArr)
+        drawMT.drawMergeTree_version2(data2drawMT, margin, height, width, svgID, data[0].pointData, data2stream4type, categoryArr)
     }
 
     initializeCanvas() {
@@ -75,4 +75,4 @@ class Type0MT extends React.Component {
 export default connect(
     mapStateToProps,
     mapDispatchToProps
-)(Type0MT);
+)(Type0MT_version);
