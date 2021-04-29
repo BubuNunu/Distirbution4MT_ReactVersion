@@ -7,7 +7,7 @@ const initialState = {
     histogramData: {
 
     },
-    sliderValue: 5
+    sliderValue: 3
 };
 
 function rootReducer(state = initialState, action) {

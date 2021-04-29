@@ -1,7 +1,7 @@
-.ant-card-extra{
-    width: 35%;
-}
 .header {
     font-size: large;
     color: #9e9e9e;
+}
+#mapDiv{
+    border: 1px solid gray;
 }

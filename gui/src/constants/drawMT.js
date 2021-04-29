@@ -153,6 +153,7 @@ function drawStreamgraph4eachBranch(data2stream, yScale, xScale, width, data2dra
                 svg.selectAll("#" + cateLayer2show).style("fill-opacity", 0.8)
             })
             .on("click", function (d) {
+                console.log("d for the layer: ", d)
                 console.log("click the layer of the streamgraph: ", categoryArr[d.id])
             })
     }
@@ -387,22 +388,24 @@ export const drawMT = {
 
     },
     getData4streamgraph: function (data2drawMT, data, cateCount, kdetype, sliderValue) {
-        // get the last point of the main branch, then get the distribution of cats at the point, the category can be soreted by the count at the point
-        //// last point on the main branch
-        let lastPointonBranch = data2drawMT.data[0][1][data2drawMT.data[0][1].length - 1]
-        // console.log("lastPointonBranch: ", lastPointonBranch)
-        //// get the category sorted by the kdebytype1 at the last point of main branch
-        let cat_to_count = []
-        for (let i = 0; i < cateCount; i++) {
-            cat_to_count.push([i, data[0].pointData.KDE_ByType_I1.data[cateCount * lastPointonBranch + i]])
-        }
-        cat_to_count.sort(function (a, b) { return b[1] - a[1] })
-        // console.log("cat_to_count: ", cat_to_count)
-        cat_to_count = cat_to_count.slice(0, sliderValue)
-        let topNcategories = new Set(cat_to_count.map(item => item[0]))
-        // console.log("topNcategories is: ", topNcategories)
+        // get the last point of the branch, then get the distribution of cats at the point, the category can be soreted by the count at the point
 
         let data2stream4type = data2drawMT.data.map(pArr => {
+            //// last point on the each branch => help to find the topN categories on the hotspot(branch)
+            let lastPointonBranch = pArr[1][pArr[1].length - 2]
+            if (pArr[0] == 0) {
+                lastPointonBranch = pArr[1][pArr[1].length - 1]
+            }
+            // console.log("lastPointonBranch: ", lastPointonBranch)
+            //// get the category sorted by the kdebytype1 at the last point of main branch
+            let cat_to_count = []
+            for (let i = 0; i < cateCount; i++) {
+                cat_to_count.push([i, data[0].pointData.KDE_ByType_I1.data[cateCount * lastPointonBranch + i]])
+            }
+            cat_to_count.sort(function (a, b) { return b[1] - a[1] })
+            cat_to_count = cat_to_count.slice(0, sliderValue)
+            let topNcategories = new Set(cat_to_count.map(item => item[0]))
+
             let distributionOnBranch = [
                 pArr[0],
                 [],

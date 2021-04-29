@@ -1,4 +1,5 @@
-
+import * as THREE from "three";
+import * as L from "leaflet";
 class KDERenderer {
   constructor(leafletMap){
 
@@ -267,4 +268,7 @@ void main() {
     this.renderer.render( this.scene, this.camera );
   }
 
+}
+export const KDERenderObject = {
+  KDERenderer:KDERenderer
 }

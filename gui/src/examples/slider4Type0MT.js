@@ -20,10 +20,7 @@ class IntegerStep extends React.Component {
         const { data, updateSliderValue, sliderValue } = this.props;
         // console.log("data: ", data)
         let categoryNum = 64
-        // if (data) {
-        //     categoryNum = data[0].fieldData.CategoryDictionary.nTuples
-        // }
-        // console.log("categoryNum: ", categoryNum)
+        // let categoryNum = data[0].fieldData.CategoryDictionary.nTuples
 
         return (
             <Row>

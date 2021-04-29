@@ -42,12 +42,11 @@ class Type0MT extends React.Component {
         let data2drawMT = drawMT.getData4mergetree(data)
         let cateCount = data[0].pointData.KDE_ByType_I0.nComponents
         let data2stream4type = drawMT.getData4streamgraph(data2drawMT, data, cateCount, "KDE_ByType_I0", sliderValue)
-        
         drawMT.drawMergeTree(data2drawMT, margin, height, width, svgID, data[0].pointData, data2stream4type, categoryArr)
     }
 
     initializeCanvas() {
-        console.log("data to draw type1mt: ", this.props);
+        // console.log("data to draw type1mt: ", this.props);
         this.renderSvg(this.props);
     }
 
