@@ -5,3 +5,6 @@
 #mapDiv{
     border: 1px solid gray;
 }
+.ant-card-extra{
+    padding: 0;
+}

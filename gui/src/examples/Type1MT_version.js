@@ -7,7 +7,8 @@ import { drawMT } from "../constants/drawMT.js"
 const mapStateToProps = state => {
     return {
         data: state.data,
-        sliderValue: state.sliderValue
+        sliderValue: state.sliderValue,
+        visTypeValue: state.visTypeValue
     };
 };
 
@@ -33,7 +34,8 @@ class Type1MT_version extends React.Component {
     }
 
     renderSvg(props) {
-        const { svgID, canvasHeight, data, sliderValue } = props;
+        const { svgID, canvasHeight, data, sliderValue, visTypeValue } = props;
+        // type1 should be controlled another parameters, type to show the distirbution: streamgraph, piechart, donot chart
 
         const margin = { top: 24, right: 25, bottom: 30, left: 45 };
         const height = canvasHeight;
@@ -43,7 +45,7 @@ class Type1MT_version extends React.Component {
         let cateCount = data[0].pointData.KDE_ByType_I0.nComponents
         let data2stream4type = drawMT.getData4streamgraph(data2drawMT, data, cateCount, "KDE_ByType_I1", sliderValue)
         
-        drawMT.drawMergeTree_version2(data2drawMT, margin, height, width, svgID, data[0].pointData, data2stream4type, categoryArr)
+        drawMT.drawMergeTree_version2(data2drawMT, margin, height, width, svgID, data[0].pointData, data2stream4type, categoryArr, visTypeValue, 1)
     }
 
     initializeCanvas() {

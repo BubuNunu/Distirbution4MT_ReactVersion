@@ -276,6 +276,108 @@ function drawfixedSG4eachBranch(data2stream, yScale, xScale, width, data2draw, p
             })
     }
 }
+function piechartView(data2stream, yScale, xScale, width, data2draw, pointData, svg, categoryArr) {
+    let intersectionSet = new Set();
+    for (let i = 0; i < data2draw.data.length; i++) {
+        if (data2draw.data[i][0] == 0) {
+            continue
+        }
+        intersectionSet.add(data2draw.data[i][1].slice(-1)[0]);
+    }
+
+    //// the pichartData based on data4stream, notice it don't contain the last point on the parent's branch
+    let data4piechart = []
+    for (let i = 0; i < data2draw.data.length; i++) {
+        // create info for the branch
+        let branchInfo = []
+        branchInfo.push(data2draw.data[i][0]);
+        // get the locations for pie on the branch
+        let locations = [];
+        locations.push([data2draw.data[i][1][0], 0]);
+        let pointNum4branchExceptlastone = data2draw.data[i][1].length - 2
+        if (branchInfo[0] == 0) {
+            pointNum4branchExceptlastone = data2draw.data[i][1].length - 1
+        }
+        for (let j = 1; j < pointNum4branchExceptlastone; j++) {
+            if (intersectionSet.has(data2draw.data[i][1][j])) {
+                locations.push([data2draw.data[i][1][j], j]);
+            }
+        }
+        if (branchInfo[0] == 0) {
+            locations.push([data2draw.data[i][1][data2draw.data[i][1].length - 1], data2draw.data[i][1].length - 1]);
+        } else {
+            locations.push([data2draw.data[i][1][data2draw.data[i][1].length - 2], data2draw.data[i][1].length - 2]);
+        }
+
+        branchInfo.push(locations)
+        data4piechart.push(branchInfo)
+    }
+    console.log("data4piechart: ", data4piechart);
+    console.log("data2stream: ", data2stream)
+    console.log("pointData: ", pointData)
+
+    // draw the pie chart
+    //// get the radius for the pie
+    let countMin = Math.min(...pointData.Size.data)
+    let countMax = Math.max(...pointData.Size.data)
+
+    // here to set the width of streamgraph for the branch
+    let pieWmax = width / (data2draw.data.length),
+        pieWmin = width / (data2draw.data.length * 0.5)
+    let pieWscale = d3.scaleLinear()
+        .domain([countMin, countMax])
+        .range([pieWmax, pieWmin])
+
+    const pie = d3.pie()
+        .value(d => d[0])
+
+    let borderWidth = 1;
+
+    for (let i = 0; i < data4piechart.length; i++) {
+        // draw all the pies on the branch
+        const branchId = data4piechart[i][0];
+        for (let j = 0; j < data4piechart[i][1].length - 1; j++) {
+            const position4pie = data4piechart[i][1][j];
+            let x = xScale(pointData.Layout.data[2 * position4pie[0] + 1])
+            let y = yScale(pointData.KDE.data[position4pie[0]])
+            const position4pieData = data4piechart[i][1][j + 1];
+            let radius = pieWscale(pointData.Size.data[position4pieData[0]]);
+            const arc = d3.arc()
+                .innerRadius(0)
+                .outerRadius(radius - borderWidth * 5);
+            let distribution = [];
+            for (let k = 0; k < data2stream[branchId][1].length; k++) {
+                distribution.push([data2stream[branchId][1][k].size[position4pieData[1]], data2stream[branchId][1][k].id])
+            }
+            // console.log("distribution: ", branchId, position4pie, distribution)
+
+            const svg4pie = svg.append("g")
+                .attr("class", "g4pie")
+                .attr("id", "g4pie_" + branchId + "_" + position4pieData[0])
+                .attr("transform", `translate(${x}, ${y})`);
+            const path = svg4pie.selectAll(".piePath")
+                .data(pie(distribution))
+                .enter()
+                .append("path")
+                .attr("class", "piePath")
+                .attr("fill", (d) => {
+                    // console.log("d in the pie: ", d)
+                    if (d.data[1] == "restCountID") return "gray";
+                    let colorId = d.data[1] % 12
+                    return rgbToHex(colorMap[colorId * 3],
+                        colorMap[colorId * 3 + 1],
+                        colorMap[colorId * 3 + 2])
+                })
+                .attr("d", arc)
+                .attr("stroke", "white")
+                .attr("stroke-width", borderWidth + "px")
+
+        }
+
+    }
+
+}
+
 
 
 export const drawMT = {
@@ -445,7 +547,7 @@ export const drawMT = {
         })
         return data2stream4type
     },
-    drawMergeTree_version2: function (data2draw, margin, height, width, svgID, pointData, data2stream, categoryArr) {
+    drawMergeTree_version2: function (data2draw, margin, height, width, svgID, pointData, data2stream, categoryArr, visTypeValue, type4mt) {
         d3.select("#" + svgID).style("width", width);
         const svg = d3.select("#" + svgID + "-base")
 
@@ -517,7 +619,20 @@ export const drawMT = {
             .attr("stroke", "black")
             .style("fill", "none")
 
-        // draw the stream graph for each arc
-        drawfixedSG4eachBranch(data2stream, yScale, xScale, width, data2draw, pointData, svg, categoryArr)
+        // draw type0 or type1
+        if (type4mt == 0) {
+            drawfixedSG4eachBranch(data2stream, yScale, xScale, width, data2draw, pointData, svg, categoryArr)
+        } else {
+            // draw the stream graph for each arc
+            if (visTypeValue == "streamgraph") {
+                drawfixedSG4eachBranch(data2stream, yScale, xScale, width, data2draw, pointData, svg, categoryArr)
+            } else if (visTypeValue == "piechart") {
+                console.log("draw the pie chart for merge tree. ")
+                piechartView(data2stream, yScale, xScale, width, data2draw, pointData, svg, categoryArr)
+            } else if (visTypeValue == "donutchart") {
+                console.log("draw the donut chart. ")
+            }
+        }
+
     }
 }

@@ -1,6 +1,6 @@
 import * as React from "react";
 import { connect } from "react-redux";
-import { Slider, InputNumber, Row, Col } from 'antd';
+import { Slider, InputNumber} from 'antd';
 import { updateSliderValue } from "../actions/index.js";
 const mapStateToProps = state => {
     return {
@@ -23,25 +23,25 @@ class IntegerStep extends React.Component {
         // let categoryNum = data[0].fieldData.CategoryDictionary.nTuples
 
         return (
-            <Row>
-                <Col span={12}>
+            <div>
+                <div>
                     <Slider
                         min={1}
                         max={categoryNum}
                         onChange={updateSliderValue}
                         value={typeof sliderValue === 'number' ? sliderValue : 0}
                     />
-                </Col>
-                <Col span={4}>
+                </div>
+                <div>
                     <InputNumber
                         min={1}
                         max={categoryNum}
-                        style={{ margin: '0 16px' }}
+                        style={{ margin: '0 0px' }}
                         value={sliderValue}
                         onChange={updateSliderValue}
                     />
-                </Col>
-            </Row>
+                </div>
+            </div>
         );
     }
 }

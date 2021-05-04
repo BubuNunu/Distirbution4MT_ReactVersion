@@ -11,8 +11,7 @@ import 'leaflet/dist/leaflet.css';
 
 const mapStateToProps = state => {
     return {
-        data: state.data,
-        sliderValue: state.sliderValue
+        data: state.data
     };
 };
 
@@ -38,8 +37,8 @@ class MapView extends React.Component {
     }
 
     renderSvg(props) {
-        const { divID, canvasHeight, data, sliderValue } = props;
-        // console.log("props in map view: ", divID, canvasHeight, data, sliderValue)
+        const { divID, canvasHeight, data } = props;
+        // console.log("props in map view: ", divID, canvasHeight, data)
         const height = canvasHeight;
         const width = this.container.current.getBoundingClientRect().width * 0.91;
         d3.select("#" + divID).style("height", height + "px")
@@ -49,7 +48,7 @@ class MapView extends React.Component {
         // //// Purdue univerisity data
         // let centerLatLong = [40.42, -86.89]
 
-        console.log("divID for map: ", divID, data)
+        // console.log("divID for map: ", divID, data)
 
         let Stadia_AlidadeSmooth = L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png', {
             maxZoom: 20,
@@ -121,14 +120,6 @@ class MapView extends React.Component {
         //  kdeRenderer.setVtkDataSet(data[0]);
         //  kdeRenderer.setCatMap();
         //  kdeRenderer.render(0, 0, 0.7, 10, 1, -1);
-
-
-
-
-
-
-
-
 
     }
 

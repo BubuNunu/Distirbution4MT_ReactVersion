@@ -10,6 +10,7 @@ import React from "react";
 import Type0MT_version from "./Type0MT_version";
 import Type1MT_version from "./Type1MT_version";
 import IntegerStep from "./slider4Type0MT";
+import VisTypeSelection from "./SelectVisType";
 import MapView from "./MapView";
 import "./Main.css"
 
@@ -68,30 +69,28 @@ export default class Main extends React.Component {
                         </Col>
                         <Col span={"14"}>
                             <Row>
-                                <Col span={"24"}>
-                                    <Card bordered={false} style={{ height: globalHeight * 0.1 }}>
-                                        <IntegerStep title={"TopN categories"} style={{ width: 200 }} />
-                                    </Card>
-                                </Col>
-                            </Row>
-                            <Row>
-                                <Col span={"12"}>
-                                    <Card title={"Type1MT"}>
+                                <Col span={"10"}>
+                                    <Card title={"Type1MT"} extra={<VisTypeSelection/>}>
                                         <Type1MT_version
                                             svgID={"type1MT_version"}
-                                            canvasHeight={globalHeight * 0.4}
+                                            canvasHeight={globalHeight * 0.5}
                                         />
                                     </Card>
                                 </Col>
-                                <Col span={"12"}>
+                                <Col span={"10"}>
                                     <Card title={"Type0MT"}>
                                         <Type0MT_version
                                             svgID={"type0MT_version"}
-                                            canvasHeight={globalHeight * 0.4}
+                                            canvasHeight={globalHeight * 0.5}
                                         />
                                     </Card>
                                 </Col>
-
+                                <Col span={"4"}>
+                                    <Card title={"TopN categories"} style={{ height: globalHeight * 0.2 }}>
+                                        <IntegerStep   />
+                                    </Card>
+                                    
+                                </Col>
                             </Row>
                         </Col>
 
@@ -106,16 +105,6 @@ export default class Main extends React.Component {
                             <Card title={"Ranking changes"}></Card>
                         </Col>
                     </Row>
-                    {/* <Row>
-                        <Col span={"24"}>
-                            <Card title={"mapviewTesting"}>
-                                <MapView
-                                    divID={"mapDivtesting"}
-                                    canvasHeight={globalHeight * 0.5}
-                                />
-                            </Card>
-                        </Col>
-                    </Row> */}
                 </Content>
             </Layout>
         );

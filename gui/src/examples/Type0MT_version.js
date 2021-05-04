@@ -43,7 +43,7 @@ class Type0MT_version extends React.Component {
         let cateCount = data[0].pointData.KDE_ByType_I0.nComponents
         let data2stream4type = drawMT.getData4streamgraph(data2drawMT, data, cateCount, "KDE_ByType_I0", sliderValue)
 
-        drawMT.drawMergeTree_version2(data2drawMT, margin, height, width, svgID, data[0].pointData, data2stream4type, categoryArr)
+        drawMT.drawMergeTree_version2(data2drawMT, margin, height, width, svgID, data[0].pointData, data2stream4type, categoryArr, null, 0)
     }
 
     initializeCanvas() {
