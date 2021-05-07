@@ -2,6 +2,7 @@ import axios from "axios";
 import { LOADING_DATA } from "../constants/actionTypes";
 import { UPDATE_SLIDER_VALUE } from "../constants/actionTypes";
 import { UPDATE_VisType_VALUE } from "../constants/actionTypes";
+import { UPDATE_Legend_Data } from "../constants/actionTypes";
 require("../common/ttkWebSocketIO.js");
 
 export function getData() {
@@ -59,4 +60,7 @@ export function updateSliderValue(payload) {
 }
 export function updateVisType(payload) {
     return {type: UPDATE_VisType_VALUE, payload};
+}
+export function updateLegendData(payload) {
+    return {type: UPDATE_Legend_Data, payload};
 }

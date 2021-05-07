@@ -10,6 +10,7 @@ import React from "react";
 import Type0MT_version from "./Type0MT_version";
 import Type1MT_version from "./Type1MT_version";
 import IntegerStep from "./slider4Type0MT";
+import Legend from "./legend";
 import VisTypeSelection from "./SelectVisType";
 import MapView from "./MapView";
 import "./Main.css"
@@ -70,7 +71,7 @@ export default class Main extends React.Component {
                         <Col span={"14"}>
                             <Row>
                                 <Col span={"10"}>
-                                    <Card title={"Type1MT"} extra={<VisTypeSelection/>}>
+                                    <Card title={"Type1MT"} extra={<VisTypeSelection />}>
                                         <Type1MT_version
                                             svgID={"type1MT_version"}
                                             canvasHeight={globalHeight * 0.5}
@@ -86,10 +87,17 @@ export default class Main extends React.Component {
                                     </Card>
                                 </Col>
                                 <Col span={"4"}>
-                                    <Card title={"TopN categories"} style={{ height: globalHeight * 0.2 }}>
-                                        <IntegerStep   />
+                                    <Card style={{ height: globalHeight * 0.12 }}>
+                                        <IntegerStep />
                                     </Card>
-                                    
+                                    <Card>
+                                        <Legend
+                                            svgID={"legendSvg"}
+                                            canvasHeight={globalHeight * 0.41}
+                                        />
+                                    </Card>
+
+
                                 </Col>
                             </Row>
                         </Col>

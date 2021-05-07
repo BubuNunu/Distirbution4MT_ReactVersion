@@ -2,6 +2,7 @@ import * as React from "react";
 import * as d3 from "d3";
 import { connect } from "react-redux";
 import { drawMT } from "../constants/drawMT.js"
+import { updateLegendData } from "../actions/index.js";
 
 
 const mapStateToProps = state => {
@@ -15,6 +16,7 @@ const mapStateToProps = state => {
 // update global data: functionsdfgd
 const mapDispatchToProps = dispatch => {
     return {
+        updateLegendData: newValue => dispatch(updateLegendData(newValue))
     };
 };
 
@@ -34,7 +36,8 @@ class Type1MT_version extends React.Component {
     }
 
     renderSvg(props) {
-        const { svgID, canvasHeight, data, sliderValue, visTypeValue } = props;
+        const { svgID, canvasHeight, data, sliderValue, visTypeValue, updateLegendData } = props;
+        
         // type1 should be controlled another parameters, type to show the distirbution: streamgraph, piechart, donot chart
 
         const margin = { top: 24, right: 25, bottom: 30, left: 45 };
@@ -43,7 +46,10 @@ class Type1MT_version extends React.Component {
         let categoryArr = data[0].fieldData.CategoryDictionary.data
         let data2drawMT = drawMT.getData4mergetree(data)
         let cateCount = data[0].pointData.KDE_ByType_I0.nComponents
-        let data2stream4type = drawMT.getData4streamgraph(data2drawMT, data, cateCount, "KDE_ByType_I1", sliderValue)
+        let data2stream4typeAndtopNcat = drawMT.getData4streamgraph(data2drawMT, data, cateCount, "KDE_ByType_I1", sliderValue)
+        let data2stream4type = data2stream4typeAndtopNcat[0];
+        updateLegendData([...data2stream4typeAndtopNcat[1]]);
+
         
         drawMT.drawMergeTree_version2(data2drawMT, margin, height, width, svgID, data[0].pointData, data2stream4type, categoryArr, visTypeValue, 1)
     }

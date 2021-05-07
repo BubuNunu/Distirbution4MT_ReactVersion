@@ -8,3 +8,17 @@
 .ant-card-extra{
     padding: 0;
 }
+.toolTitile {
+    font-size: 0.7rem;
+    margin: 1px auto;
+    text-align: center;
+    color: #000000;
+    display: inline-block;
+    background: #8080802b;
+}
+.ant-card-body{
+    padding: 10px;
+}
+.ant-input-number{
+    margin: 10px, 6px, 10px;
+}

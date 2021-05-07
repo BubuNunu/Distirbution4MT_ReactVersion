@@ -24,6 +24,7 @@ class IntegerStep extends React.Component {
 
         return (
             <div>
+                <p class="toolTitile">TopN Categories</p>
                 <div>
                     <Slider
                         min={1}
