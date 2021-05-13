@@ -203,6 +203,23 @@ function drawfixedSG4eachBranch(data2stream, yScale, xScale, width, data2draw, p
         .domain([countMin, countMax])
         .range([streamWmin, streamWmax])
 
+    // add the tooltip for mousing layers
+    svg.append("rect")
+        .attr("class", "tooltip")
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("width", "5rem")
+        .attr("height", "1rem")
+        .style("stroke", "gray")
+        .style("fill", "gray")
+        .style("stroke-width", "1px");
+
+    svg.append("text")
+        .attr("class", "tooltipText")
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("dy", "1.2em")
+
     // draw the stream graph for each branch
     for (let index = 0; index < data2stream.length; index++) {
         let streamUnit = streamWScale(data2stream[index][2])
@@ -264,12 +281,30 @@ function drawfixedSG4eachBranch(data2stream, yScale, xScale, width, data2draw, p
             })
             .attr("d", LayersArea)
             .on("mouseover", function (d) {
+                // console.log(d3.mouse(this))
                 let cateLayer2show = d3.select(this).attr("id")
                 svg.selectAll("#" + cateLayer2show).style("fill-opacity", 1)
+                // add the tooltip for the layer information
+                d3.select(".tooltip")
+                    .style("opacity", "1")
+                    .attr("x", d3.mouse(this)[0] + 5)
+                    .attr("y", d3.mouse(this)[1] + 5)
+                    .raise()
+
+                d3.select(".tooltipText")
+                    .style("opacity", "1")
+                    .attr("x", d3.mouse(this)[0] + 5)
+                    .attr("y", d3.mouse(this)[1] + 5)
+                    .html(categoryArr[d.id])
+                    .raise()
+
             })
             .on("mouseout", function (d) {
                 let cateLayer2show = d3.select(this).attr("id")
                 svg.selectAll("#" + cateLayer2show).style("fill-opacity", 0.8)
+                // deal with the tooltip
+                d3.select(".tooltip").style("opacity", "0");
+                d3.select(".tooltipText").style("opacity", "0");
             })
             .on("click", function (d) {
                 console.log("click the layer of the streamgraph: ", categoryArr[d.id])
@@ -646,7 +681,7 @@ export const drawMT = {
             }
             return distributionOnBranch
         })
-        
+
         return [data2stream4type, topNcategory4allbranchs]
     },
     drawMergeTree_version2: function (data2draw, margin, height, width, svgID, pointData, data2stream, categoryArr, visTypeValue, type4mt) {
@@ -729,10 +764,10 @@ export const drawMT = {
             if (visTypeValue == "streamgraph") {
                 drawfixedSG4eachBranch(data2stream, yScale, xScale, width, data2draw, pointData, svg, categoryArr)
             } else if (visTypeValue == "piechart") {
-                console.log("draw the pie chart for merge tree. ")
+                // console.log("draw the pie chart for merge tree. ")
                 piechartView(data2stream, yScale, xScale, width, data2draw, pointData, svg, categoryArr)
             } else if (visTypeValue == "donutchart") {
-                console.log("draw the donut chart. ")
+                // console.log("draw the donut chart. ")
                 donutchartView(data2stream, yScale, xScale, width, data2draw, pointData, svg, categoryArr)
             }
         }

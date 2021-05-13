@@ -22,3 +22,14 @@
 .ant-input-number{
     margin: 10px, 6px, 10px;
 }
+.tooltip {
+    pointer-events:none; /*let mouse events pass through*/
+    opacity:0;
+    /* transition: opacity 0.3s; */
+    /* text-shadow:1px 1px 0px gray; */
+}
+.tooltipText {
+    pointer-events:none; /*let mouse events pass through*/
+    opacity:0;
+    font-size: 0.5rem;
+}
